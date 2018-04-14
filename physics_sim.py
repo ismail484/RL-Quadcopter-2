@@ -48,8 +48,7 @@ class PhysicsSim():
         env_bounds = 300.0  # 300 m / 300 m / 300 m
         self.lower_bounds = np.array([-env_bounds / 2, -env_bounds / 2, 0])
         self.upper_bounds = np.array([env_bounds / 2, env_bounds / 2, env_bounds])
-        self.out = 0
-        self.finish = 0
+
         self.reset()
 
     def reset(self):
@@ -138,17 +137,14 @@ class PhysicsSim():
             if position[ii] <= self.lower_bounds[ii]:
                 new_positions.append(self.lower_bounds[ii])
                 self.done = True
-                self.out += 1
             elif position[ii] > self.upper_bounds[ii]:
                 new_positions.append(self.upper_bounds[ii])
                 self.done = True
-                self.out += 1
             else:
                 new_positions.append(position[ii])
 
         self.pose = np.array(new_positions + list(angles))
         self.time += self.dt
         if self.time > self.runtime:
-            self.finish += 1
             self.done = True
         return self.done

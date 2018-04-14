@@ -26,6 +26,42 @@ class Task():
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.]) 
 
+    def get_reward_new(self):
+        """Uses current pose of sim to return reward."""
+        #reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
+        
+        #return reward
+        reward = 0.0
+
+        # Reward positive velocity along z-axis
+        reward += self.sim.v[2]
+
+        # Reward positions close to target along z-axis
+        reward -= (abs(self.sim.pose[ 2] - self.target_pos[ 2])) / 2.0 
+
+        # A lower sensativity towards drifting in the xy-plane
+        reward -= (abs(self.sim.pose[:2] - self.target_pos[:2])).sum() / 4.0
+
+        
+        reward -= (abs(self.sim.angular_v[:3])).sum()
+
+        return reward
+
+    def step_new(self, rotor_speeds):
+        """Uses action to obtain next state, reward, done."""
+        reward = 0
+        pose_all = []
+        for _ in range(self.action_repeat):
+            done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
+            reward += self.get_reward_new() 
+            pose_all.append(self.sim.pose)
+
+            if(self.sim.pose[2] >= self.target_pos[2]):
+                reward += 100
+                done = True
+        next_state = np.concatenate(pose_all)
+        return next_state, reward, done
+
     def get_reward(self):
         """Uses current pose of sim to return reward."""
         reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
